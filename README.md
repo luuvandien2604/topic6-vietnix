@@ -142,8 +142,39 @@ sudo systemctl restart nginx
 sudo a2enmod ssl
 ```
 
-# 2. vì sao nginx đứng trước apache 
+# 2. Vì sao nginx đứng trước apache 
 
-NGINX có thế mạnh ở khả năng xử lý các request tĩnh như hình ảnh, CSS, JavaScript rất nhanh nhờ kiến trúc non-blocking và tiêu tốn ít tài nguyên hệ thống. Khi đứng ở vai trò reverse proxy, NGINX còn có khả năng điều phối lưu lượng truy cập đến nhiều backend khác nhau, lọc request độc hại, chặn bot, và xử lý SSL hiệu quả. Nhờ đó, NGINX sẽ nhận toàn bộ request từ client, xử lý các phần đơn giản, và chỉ chuyển các request động (PHP, Laravel, WordPress...) cho Apache.
+* NGINX có thế mạnh ở khả năng xử lý các request tĩnh như hình ảnh, CSS, JavaScript rất nhanh nhờ kiến trúc non-blocking và tiêu tốn ít tài nguyên hệ thống. Khi đứng ở vai trò reverse proxy, NGINX còn có khả năng điều phối lưu lượng truy cập đến nhiều backend khác nhau, lọc request độc hại, chặn bot, và xử lý SSL hiệu quả. Nhờ đó, NGINX sẽ nhận toàn bộ request từ client, xử lý các phần đơn giản, và chỉ chuyển các request động (PHP, Laravel, WordPress...) cho Apache.
 
-Apache ngược lại, xử lý các nội dung động rất tốt, đặc biệt là các ứng dụng PHP như Laravel và WordPress. Apache hỗ trợ .htaccess, cho phép tùy chỉnh theo thư mục – một tính năng quan trọng mà nhiều framework hoặc CMS hiện nay sử dụng. Ngoài ra, hệ sinh thái module lâu đời của Apache rất phong phú và vẫn được nhiều hệ thống kế thừa.
+* Apache ngược lại, xử lý các nội dung động rất tốt, đặc biệt là các ứng dụng PHP như Laravel và WordPress. Apache hỗ trợ .htaccess, cho phép tùy chỉnh theo thư mục – một tính năng quan trọng mà nhiều framework hoặc CMS hiện nay sử dụng. Ngoài ra, hệ sinh thái module lâu đời của Apache rất phong phú và vẫn được nhiều hệ thống kế thừa.
+
+* Trong mô hình này thông qua 2 file config của nginx và apache, lấy ví dụ ở domain `vdien.laravel.vietnix.tech'". Có thể thấy ứng dụng của mô hình kết hợp Nginx + Apache
+
+    * Ở file cấu hình Nginx cho domain trên, đoạn mã dưới đây đã đặt Nginx đứng trước và tiếp nhận toàn bộ request từ client, sau đó chuyển tiếp request đến Apache. Qua đó, giúp tiết kiệm tài nguyên. Nginx xử lý static file, request đầu vào nhanh hơn Apache, giảm tải cho Apache. Ngoài ra Nginx có thể dùng rate limiting, WAF, cache layer, chống brute-force tốt hơn.
+    ```
+    server {
+        listen 80;
+        server_name vdien.laravel.vietnix.tech;
+    
+        location / {
+            proxy_pass http://127.0.0.1:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            ...
+        }
+    }
+    ```
+    * Sau khi nhận request từ Nginx, Apache tận dụng khả năng xử lý PHP mạnh mẽ hơn Nginx để xử lý các yêu cầu từ client. Các yêu cầu đã được Nginx lọc nên đồng thời trở nên an toàn hơn. Mô hình kết hợp Nginx + Apache tối ưu và tận dụng hiệu suất Nginx và sự linh hoạt của Apache.
+    ```
+    <VirtualHost *:8080>
+        ServerName vdien.laravel.vietnix.tech
+        DocumentRoot /var/www/laravel/public
+    
+        <Directory /var/www/laravel/public>
+            AllowOverride All
+            Require all granted
+        </Directory>
+    </VirtualHost>
+    ```
+
+
