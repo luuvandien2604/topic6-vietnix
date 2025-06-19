@@ -148,7 +148,7 @@ sudo a2enmod ssl
 
 * Apache ngược lại, xử lý các nội dung động rất tốt, đặc biệt là các ứng dụng PHP như Laravel và WordPress. Apache hỗ trợ .htaccess, cho phép tùy chỉnh theo thư mục – một tính năng quan trọng mà nhiều framework hoặc CMS hiện nay sử dụng. Ngoài ra, hệ sinh thái module lâu đời của Apache rất phong phú và vẫn được nhiều hệ thống kế thừa.
 
-* Trong mô hình này thông qua 2 file config của nginx và apache, lấy ví dụ ở domain `vdien.laravel.vietnix.tech'". Có thể thấy ứng dụng của mô hình kết hợp Nginx + Apache
+* Trong mô hình này thông qua 2 file config của nginx và apache, lấy ví dụ ở domain `vdien.laravel.vietnix.tech` . Có thể thấy ứng dụng của mô hình kết hợp Nginx + Apache
 
     * Ở file cấu hình Nginx cho domain trên, đoạn mã dưới đây đã đặt Nginx đứng trước và tiếp nhận toàn bộ request từ client, sau đó chuyển tiếp request đến Apache. Qua đó, giúp tiết kiệm tài nguyên. Nginx xử lý static file, request đầu vào nhanh hơn Apache, giảm tải cho Apache. Ngoài ra Nginx có thể dùng rate limiting, WAF, cache layer, chống brute-force tốt hơn.
     ```
