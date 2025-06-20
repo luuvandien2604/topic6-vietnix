@@ -136,6 +136,27 @@ server {
 }
 
 ```
+* Chỉnh sửa file Apache site tại:
+```
+nano /etc/apache2/sites-available/vdien.laravel.vietnix.tech.conf
+nano /etc/apache2/sites-available/vdien.wp.vietnix.tech.conf
+```
+```
+<VirtualHost *:8080>
+    DocumentRoot /var/www/html/Source_wp
+    ServerName vdien.wp.vietnix.tech
+
+    <Directory "/var/www/html/Source_wp">
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/vdien.wp.vietnix.tech-error.log
+    CustomLog ${APACHE_LOG_DIR}/vdien.wp.vietnix.tech-access.log combined
+
+</VirtualHost>
+
+```
 **Làm tương tự với web Wordpress**
 
 * Sau khi cấu hình xong thì phải sửa lại nội dung file TrustProxies.php để Laravel tin tưởng proxy (TrustProxies Middleware)
