@@ -83,6 +83,7 @@ server {
     listen 80;
     server_name vdien.laravel.vietnix.tech;
 
+
     location ~* .(gif|jpg|jpeg|png|ico|wmv|3gp|avi|mpg|mpeg|mp4|flv|mp3|mid|js|css|html|htm|wml)$ {
         root /var/www/laravel/public;
         expires 30d;
@@ -106,7 +107,7 @@ server {
 }
 
 server {
-    listen 443 ssl;
+    listen 443 ssl http2;
     server_name vdien.laravel.vietnix.tech;
 
     ssl_certificate /etc/ssl/zerossl/laravel/certificate.crt;
@@ -127,7 +128,7 @@ server {
     }
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass https://127.0.0.1:8443;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -138,11 +139,45 @@ server {
 ```
 * Chỉnh sửa file Apache site tại:
 ```
-nano /etc/apache2/sites-available/vdien.laravel.vietnix.tech.conf
-nano /etc/apache2/sites-available/vdien.wp.vietnix.tech.conf
-```
-```
 <VirtualHost *:8080>
+    DocumentRoot /var/www/laravel/public
+    ServerName vdien.laravel.vietnix.tech
+
+    <Directory "/var/www/laravel/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/vdien.laravel.vietnix.tech-error.log
+    CustomLog ${APACHE_LOG_DIR}/vdien.laravel.vietnix.tech-access.log combined
+
+    RewriteEngine On
+</VirtualHost>
+
+<VirtualHost *:8443>
+    DocumentRoot /var/www/laravel/public
+    ServerName vdien.laravel.vietnix.tech
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/zerossl/laravel/certificate.crt
+    SSLCertificateKeyFile /etc/ssl/zerossl/laravel/private.key
+    SSLCertificateChainFile /etc/ssl/zerossl/laravel/ca_bundle.crt
+
+    <Directory "/var/www/laravel/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/vdien.laravel.vietnix.tech-error.log
+    CustomLog ${APACHE_LOG_DIR}/vdien.laravel.vietnix.tech-access.log combined
+
+    RewriteEngine On
+</VirtualHost>
+
+```
+**Làm tương tự với web Wordpress**
+**Apache WP**
+```<VirtualHost *:8080>
     DocumentRoot /var/www/html/Source_wp
     ServerName vdien.wp.vietnix.tech
 
@@ -156,9 +191,84 @@ nano /etc/apache2/sites-available/vdien.wp.vietnix.tech.conf
 
 </VirtualHost>
 
-```
-**Làm tương tự với web Wordpress**
+<VirtualHost *:8443>
+    DocumentRoot /var/www/html/Source_wp
+    ServerName vdien.wp.vietnix.tech
 
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/zerossl/wp/certificate.crt
+    SSLCertificateKeyFile /etc/ssl/zerossl/wp/private.key
+    SSLCertificateChainFile /etc/ssl/zerossl/wp/ca_bundle.crt
+
+    <Directory "/var/www/html/Source_wp">
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/vdien.wp.vietnix.tech-error.log
+    CustomLog ${APACHE_LOG_DIR}/vdien.wp.vietnix.tech-access.log combined
+
+</VirtualHost>
+```
+**Nginx WP**
+```
+server {
+    listen 80;
+    server_name vdien.wp.vietnix.tech;
+
+location ~* .(gif|jpg|jpeg|png|ico|wmv|3gp|avi|mpg|mpeg|mp4|flv|mp3|mid|js|css|html|htm|wml)$ {
+        root /var/www/html/Source_wp;
+        expires 30d;
+        }
+
+    if ($http_user_agent ~* (wget|curl|sqlmap|nessus|acunetix|fimap|nikto|scanner)) {
+        return 403;
+    }
+
+    if ($request_method !~ ^(GET|POST|HEAD)$) {
+        return 444;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name vdien.wp.vietnix.tech;
+
+    ssl_certificate /etc/ssl/zerossl/wp/certificate.crt;
+    ssl_certificate_key /etc/ssl/zerossl/wp/private.key;
+    ssl_trusted_certificate /etc/ssl/zerossl/wp/ca_bundle.crt;
+
+    location ~* .(gif|jpg|jpeg|png|ico|wmv|3gp|avi|mpg|mpeg|mp4|flv|mp3|mid|js|css|html|htm|wml)$ {
+        root /var/www/html/Source_wp;
+        expires 30d;
+        }
+
+    if ($http_user_agent ~* (wget|curl|sqlmap|nessus|acunetix|fimap|nikto|scanner)) {
+        return 403;
+    }
+
+    if ($request_method !~ ^(GET|POST|HEAD)$) {
+        return 444;
+    }
+
+
+    location / {
+        proxy_pass https://127.0.0.1:8443;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
 * Sau khi cấu hình xong thì phải sửa lại nội dung file TrustProxies.php để Laravel tin tưởng proxy (TrustProxies Middleware)
 
 * Mở file tại 
